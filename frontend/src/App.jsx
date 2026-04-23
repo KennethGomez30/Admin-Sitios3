@@ -1,17 +1,32 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
+import { useAuth } from './hooks/useAuth'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
-import SesionExpirada from './components/SesionExpirada'
 import TerceroListado from './components/TerceroListado'
 import TerceroCrear from './components/TerceroCrear'
 import TerceroEditar from './components/TerceroEditar'
+
+function NavegadorConectado() {
+  const navigate = useNavigate()
+  const { navegarRef } = useAuth()
+
+  useEffect(() => {
+    navegarRef.current = navigate
+  }, [navigate, navegarRef])
+
+  return null
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        {/* Conecta useNavigate al AuthContext sin romper la jerarquía */}
+        <NavegadorConectado />
+
         <Routes>
 
           {/* Raíz */}
@@ -19,9 +34,8 @@ export default function App() {
 
           {/* Públicas */}
           <Route path="/login" element={<Login />} />
-          <Route path="/sesion-expirada" element={<SesionExpirada />} />
 
-          {/* ── Dashboard accesible a todo usuario autenticado ─ */}
+          {/* Dashboard accesible a todo usuario autenticado */}
           <Route
             path="/dashboard"
             element={
@@ -32,8 +46,6 @@ export default function App() {
           />
 
           {/* Módulo Terceros */}
-
-          {/* Listado verifica permiso '/terceros' directamente */}
           <Route
             path="/terceros"
             element={
@@ -45,12 +57,6 @@ export default function App() {
             }
           />
 
-          {/*
-            * Crear y Editar usan ruta="/terceros" osea la pantalla padre
-            * porque las pantallas con mostrar_en_menu = 0 no aparecen
-            * en user.pantallas. El permiso sobre el módulo principal
-            * cubre implícitamente sus sub-acciones.
-          */}
           <Route
             path="/terceros/crear"
             element={
