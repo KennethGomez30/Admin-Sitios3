@@ -33,7 +33,7 @@ namespace AUX5.Services
                 return new BusinessLogicResponse
                 {
                     StatusCode = 200,
-                    Message = "OK",
+                    Message = "Terceros obtenidos exitosamente.",
                     ResponseObject = data
                 };
             }
@@ -70,7 +70,7 @@ namespace AUX5.Services
                 return new BusinessLogicResponse
                 {
                     StatusCode = 200,
-                    Message = "OK",
+                    Message = "Tercero obtenido exitosamente.",
                     ResponseObject = tercero
                 };
             }

@@ -21,13 +21,15 @@ namespace AUX5
             {
                 var usuario = await auth.ValidarTokenAsync(authorization);
                 if (usuario is null)
-                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
+                    return Results.Json(
+                        new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." },
+                        statusCode: 401);
 
                 var result = await svc.ListarAsync(usuario);
                 return result.StatusCode switch
                 {
-                    200 => Results.Ok(result.ResponseObject),
-                    _ => Results.Problem(result.Message)
+                    200 => Results.Ok(result),
+                    _ => Results.Json(result, statusCode: 500)
                 };
             })
             .WithName("ListarTerceros")
@@ -42,14 +44,16 @@ namespace AUX5
             {
                 var usuario = await auth.ValidarTokenAsync(authorization);
                 if (usuario is null)
-                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
+                    return Results.Json(
+                        new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." },
+                        statusCode: 401);
 
                 var result = await svc.ObtenerPorIdAsync(id, usuario);
                 return result.StatusCode switch
                 {
-                    200 => Results.Ok(result.ResponseObject),
-                    404 => Results.NotFound(new { result.Message }),
-                    _ => Results.Problem(result.Message)
+                    200 => Results.Ok(result),
+                    404 => Results.Json(result, statusCode: 404),
+                    _ => Results.Json(result, statusCode: 500)
                 };
             })
             .WithName("ObtenerTercero")
@@ -64,17 +68,17 @@ namespace AUX5
             {
                 var usuario = await auth.ValidarTokenAsync(authorization);
                 if (usuario is null)
-                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
+                    return Results.Json(
+                        new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." },
+                        statusCode: 401);
 
                 var result = await svc.CrearAsync(request, usuario);
                 return result.StatusCode switch
                 {
-                    201 => Results.Created(
-                               $"/api/Terceros/{((TerceroEntity)result.ResponseObject!).Id}",
-                               result.ResponseObject),
-                    400 => Results.BadRequest(new { result.Message }),
-                    409 => Results.Conflict(new { result.Message }),
-                    _ => Results.Problem(result.Message)
+                    201 => Results.Json(result, statusCode: 201),
+                    400 => Results.Json(result, statusCode: 400),
+                    409 => Results.Json(result, statusCode: 409),
+                    _ => Results.Json(result, statusCode: 500)
                 };
             })
             .WithName("CrearTercero")
@@ -90,15 +94,17 @@ namespace AUX5
             {
                 var usuario = await auth.ValidarTokenAsync(authorization);
                 if (usuario is null)
-                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
+                    return Results.Json(
+                        new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." },
+                        statusCode: 401);
 
                 var result = await svc.ActualizarAsync(id, request, usuario);
                 return result.StatusCode switch
                 {
-                    200 => Results.Ok(result.ResponseObject),
-                    400 => Results.BadRequest(new { result.Message }),
-                    404 => Results.NotFound(new { result.Message }),
-                    _ => Results.Problem(result.Message)
+                    200 => Results.Ok(result),
+                    400 => Results.Json(result, statusCode: 400),
+                    404 => Results.Json(result, statusCode: 404),
+                    _ => Results.Json(result, statusCode: 500)
                 };
             })
             .WithName("ActualizarTercero")
@@ -113,15 +119,17 @@ namespace AUX5
             {
                 var usuario = await auth.ValidarTokenAsync(authorization);
                 if (usuario is null)
-                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
+                    return Results.Json(
+                        new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." },
+                        statusCode: 401);
 
                 var result = await svc.EliminarAsync(id, usuario);
                 return result.StatusCode switch
                 {
                     204 => Results.NoContent(),
-                    404 => Results.NotFound(new { result.Message }),
-                    409 => Results.Conflict(new { result.Message }),
-                    _ => Results.Problem(result.Message)
+                    404 => Results.Json(result, statusCode: 404),
+                    409 => Results.Json(result, statusCode: 409),
+                    _ => Results.Json(result, statusCode: 500)
                 };
             })
             .WithName("EliminarTercero")
