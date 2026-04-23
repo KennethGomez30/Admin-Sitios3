@@ -1,0 +1,130 @@
+/* Encabezado de página */
+.page-header-title i {
+    margin-right: 6px;
+}
+
+/* Card header */
+.card .card-header h6 {
+    font-size: 0.85rem;
+    letter-spacing: 0.05rem;
+}
+
+/* Tabla */
+.table thead.thead-light th {
+    font-size: 0.80rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04rem;
+    color: #5a5c69;
+    vertical-align: middle;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    font-size: 0.875rem;
+}
+
+/* Badges de estado */
+.badge-estado-activo {
+    background-color: #4e73df;
+    color: #fff;
+}
+
+.badge-estado-inactivo {
+    background-color: #858796;
+    color: #fff;
+}
+
+/* Botones de acciones en tabla */
+.td-acciones .btn {
+    margin-right: 2px;
+}
+
+/* Fila vacía */
+.tabla-vacia {
+    padding: 2rem 0;
+    color: #858796;
+}
+
+.tabla-vacia i {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Paginación */
+.pagination .page-link {
+    color: #4e73df;
+    font-size: 0.85rem;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #858796;
+}
+
+/* Formularios */
+.form-group label.font-weight-bold {
+    font-size: 0.85rem;
+    color: #5a5c69;
+    margin-bottom: 0.35rem;
+}
+
+.form-group .form-text {
+    font-size: 0.78rem;
+}
+
+.form-control:focus {
+    border-color: #bac8f3;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Alerta de identificación (solo lectura) */
+.alert-identificacion {
+    background-color: #f8f9fc;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.35rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.alert-identificacion i {
+    margin-right: 4px;
+}
+
+/* Separador */
+hr.separador {
+    border-top: 1px solid #e3e6f0;
+    margin: 1.5rem 0;
+}
+
+/* Botones del formulario */
+.form-actions {
+    text-align: right;
+}
+
+.form-actions .btn {
+    min-width: 110px;
+}
+
+.form-actions .btn+.btn {
+    margin-left: 8px;
+}
+
+/* Modales de feedback — header coloreado */
+.modal-header.bg-success,
+.modal-header.bg-danger {
+    border-radius: 0.35rem 0.35rem 0 0;
+}
+
+.modal-header .close {
+    opacity: 0.8;
+}
+
+.modal-header .close:hover {
+    opacity: 1;
+}

@@ -1,0 +1,13 @@
+.rotate-n-15 {
+    transform: rotate(-15deg);
+    display: inline-block;
+}
+
+/* Flecha › en ítems del menú lateral */
+.nav-arrow {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-right: 0.4rem;
+    line-height: 1;
+    opacity: 0.85;
+}

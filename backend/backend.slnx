@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AUX1/AUX1.csproj" Id="df82e18c-520a-47a8-9bab-115b7027efc9" />
+  <Project Path="AUX5/AUX5.csproj" Id="2c316b44-eb17-4d19-83e6-ed22ee6cea68" />
+  <Project Path="Bitacora/Bitacora.csproj" Id="107eaabf-601e-4446-b239-b7a978b6c98b" />
+  <Project Path="PERMISOS/PERMISOS.csproj" Id="a2c4f055-c77e-42a3-902d-1bbf4749b43b" />
+</Solution>
