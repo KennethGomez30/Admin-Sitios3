@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export function ProtectedRoute({ children, ruta }) {
-    const { user, loading, motivoCierre } = useAuth()
+    const { user, loading, motivoCierre, sesionExpirando } = useAuth()
     const location = useLocation()
 
     // Sesión aún cargando
@@ -28,10 +28,15 @@ export function ProtectedRoute({ children, ruta }) {
         )
     }
 
+    // Sesión en proceso de expirar el modal ya está visible
+    if (sesionExpirando) {
+        return children
+    }
+
     // Sin sesión activa
     if (!user) {
-        if (motivoCierre === 'expirada') return <Navigate to="/sesion-expirada" replace />
         if (motivoCierre === 'logout') return <Navigate to="/login?msg=logout" replace />
+        if (motivoCierre === 'expirada') return <Navigate to="/login" replace />
         return <Navigate to="/login?msg=nosesion" replace />
     }
 
@@ -41,7 +46,6 @@ export function ProtectedRoute({ children, ruta }) {
         const tienePantalla = pantallas.some((p) => p.ruta === ruta)
 
         if (!tienePantalla) {
-            // Guardar la ruta que intentó acceder para mostrar mensaje informativo
             return (
                 <Navigate
                     to="/dashboard"

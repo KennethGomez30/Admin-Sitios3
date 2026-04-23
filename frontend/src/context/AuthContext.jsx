@@ -14,8 +14,11 @@ const KEYS = {
     PANTALLAS: 'sc_pantallas',
 }
 
-// Tiempo de inactividad máximo 5 minutos
+// Tiempo de inactividad máximo: 5 minutos
 const INACTIVIDAD_MS = 5 * 60 * 1000
+
+// Delay que se muestra el modal antes de redirigir al login
+const DELAY_MODAL_MS = 3000
 
 // Helpers de sesión
 
@@ -64,6 +67,81 @@ function mapearTokensAux1(obj) {
     }
 }
 
+// Modal de sesión expirada vive dentro del Provider encima de todo
+
+function ModalSesionExpirada({ visible }) {
+    const [mostrar, setMostrar] = useState(false)
+
+    // Pequeño delay para que el fade-in se vea
+    useEffect(() => {
+        if (!visible) { setMostrar(false); return }
+        const id = setTimeout(() => setMostrar(true), 50)
+        return () => clearTimeout(id)
+    }, [visible])
+
+    if (!visible) return null
+
+    return (
+        <>
+            {/* Backdrop */}
+            <div
+                aria-hidden="true"
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    zIndex: 1040,
+                    transition: 'opacity 0.3s ease',
+                    opacity: mostrar ? 1 : 0,
+                }}
+            />
+
+            {/* Modal centrado */}
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modalSesionExpiradaLabel"
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 1050,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '1rem',
+                    transition: 'opacity 0.3s ease',
+                    opacity: mostrar ? 1 : 0,
+                }}
+            >
+                <div
+                    className="modal-dialog modal-dialog-centered"
+                    style={{ margin: 0, width: '100%', maxWidth: '500px' }}
+                >
+                    <div className="modal-content shadow-lg">
+
+                        {/* Header rojo — igual que todos los modales del sistema */}
+                        <div className="modal-header bg-danger text-white">
+                            <h5 className="modal-title font-weight-bold" id="modalSesionExpiradaLabel">
+                                <i className="fas fa-clock mr-2" aria-hidden="true" />
+                                Sesión Expirada
+                            </h5>
+                            {/* Sin botón de cierre: el usuario no puede descartar este modal */}
+                        </div>
+
+                        {/* Body */}
+                        <div className="modal-body">
+                            <p className="mb-0">
+                                Su sesión ha expirado por inactividad. Será redirigido al inicio de sesión.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </>
+    )
+}
+
 // Provider
 
 export function AuthProvider({ children }) {
@@ -73,15 +151,20 @@ export function AuthProvider({ children }) {
     })
     const [motivoCierre, setMotivoCierre] = useState(null)
 
+    // Estado intermedio: true mientras se muestra el modal ANTES de limpiar user
+    const [sesionExpirando, setSesionExpirando] = useState(false)
+
     const refreshTimerRef = useRef(null)
     const cerrarSesionRef = useRef(null)
     const programarRefreshRef = useRef(null)
     const userRef = useRef(null)
     const ultimaActividadRef = useRef(null)
     const actividadHandlerRef = useRef(null)
+    const navegarRef = useRef(null)
 
     userRef.current = user
 
+    // cerrarSesion
     const cerrarSesion = useCallback((llamarApi = true, motivo = 'logout') => {
         if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
 
@@ -90,25 +173,40 @@ export function AuthProvider({ children }) {
             actividadHandlerRef.current = null
         }
 
-        // Leer el token antes de limpiar para poder llamar al API después
         const accessToken = llamarApi ? localStorage.getItem(KEYS.ACCESS) : null
 
-        // Limpiar localStorage y actualizar estado de forma síncrona
-        // para que ProtectedRoute vea user=null y motivoCierre juntos en el mismo render
-        limpiarSesion()
-        setMotivoCierre(motivo)
-        setUser(null)
+        if (motivo === 'expirada') {
 
-        // Logout al API en segundo plano sin await
+            setSesionExpirando(true)
+
+            setTimeout(() => {
+                // Limpiar localStorage primero
+                limpiarSesion()
+                if (navegarRef.current) {
+                    navegarRef.current('/login', { replace: true })
+                }
+                // Limpiar estado React después de la navegación
+                setMotivoCierre('expirada')
+                setUser(null)
+                setSesionExpirando(false)
+            }, DELAY_MODAL_MS)
+
+        } else {
+            // Flujo logout normal: limpiar inmediatamente
+            limpiarSesion()
+            setMotivoCierre(motivo)
+            setUser(null)
+        }
+
+        // Llamar al API de logout en segundo plano
         if (accessToken) {
-            authService.logout(accessToken).catch(() => { /* best-effort */ })
+            authService.logout(accessToken).catch(() => { /* ignorar */ })
         }
     }, [])
 
     cerrarSesionRef.current = cerrarSesion
 
     // programarRefresh
-
     const programarRefresh = useCallback((expiresIn, refreshToken) => {
         if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current)
 
@@ -141,6 +239,7 @@ export function AuthProvider({ children }) {
 
     programarRefreshRef.current = programarRefresh
 
+    // iniciarInactividad
     const iniciarInactividad = useCallback(() => {
         if (actividadHandlerRef.current) {
             window.removeEventListener('click', actividadHandlerRef.current, true)
@@ -154,8 +253,6 @@ export function AuthProvider({ children }) {
             const inactivo = Date.now() - ultimaActividadRef.current > INACTIVIDAD_MS
 
             if (inactivo) {
-                // Cancelar el click original para que no dispare navegaciones
-                // ni acciones mientras se procesa el cierre de sesión
                 e.preventDefault()
                 e.stopPropagation()
                 cerrarSesionRef.current(false, 'expirada')
@@ -170,13 +267,11 @@ export function AuthProvider({ children }) {
     }, [])
 
     // iniciarSesion
-
     const iniciarSesion = useCallback(async (identificacion, contrasena) => {
         const data = await authService.login(identificacion, contrasena)
         if (data.statusCode !== 200) throw new Error(data.message ?? 'Credenciales inválidas.')
 
         const tokens = mapearTokensAux1(data.responseObject)
-
         const perfil = await permisosService.obtenerPerfil(tokens.accessToken)
 
         const sesionCompleta = {
@@ -193,7 +288,6 @@ export function AuthProvider({ children }) {
     }, [iniciarInactividad])
 
     // Restaurar sesión al montar
-
     useEffect(() => {
         async function restaurar() {
             const sesion = cargarSesion()
@@ -211,7 +305,6 @@ export function AuthProvider({ children }) {
                     usuarioNombre: perfil.usuarioNombre,
                     pantallas: perfil.pantallas,
                 }
-
                 guardarSesion(sesionCompleta)
                 setUser(sesionCompleta)
                 programarRefreshRef.current(sesionCompleta.expiresIn, sesionCompleta.refreshToken)
@@ -231,7 +324,6 @@ export function AuthProvider({ children }) {
                     usuarioNombre: perfil.usuarioNombre,
                     pantallas: perfil.pantallas,
                 }
-
                 guardarSesion(sesionCompleta)
                 setUser(sesionCompleta)
                 programarRefreshRef.current(sesionCompleta.expiresIn, sesionCompleta.refreshToken)
@@ -254,8 +346,10 @@ export function AuthProvider({ children }) {
     }, [iniciarInactividad])
 
     return (
-        <AuthContext.Provider value={{ user, loading, motivoCierre, iniciarSesion, cerrarSesion }}>
+        <AuthContext.Provider value={{ user, loading, motivoCierre, sesionExpirando, iniciarSesion, cerrarSesion, navegarRef }}>
             {children}
+            {/* Modal global de sesión expirada: se renderiza encima de cualquier pantalla */}
+            <ModalSesionExpirada visible={sesionExpirando} />
         </AuthContext.Provider>
     )
 }

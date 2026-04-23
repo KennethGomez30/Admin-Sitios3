@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import '../styles/login.css'
 
-// Mensajes por código de query param 
+// Mensajes por código de query param
 const MENSAJES_INFO = {
     nosesion: 'Por favor inicie sesión para utilizar el sistema.',
     logout: 'Ha cerrado sesión correctamente.',
@@ -46,7 +46,7 @@ export default function Login() {
         return () => clearTimeout(id)
     }, [mostrarError])
 
-    // ─Auto-cierre alerta INFO 5 s
+    // Auto-cierre alerta INFO 5 s
     useEffect(() => {
         if (!mostrarInfo) return
         const id = setTimeout(() => setMostrarInfo(false), 5000)
@@ -104,7 +104,7 @@ export default function Login() {
                     <p className="mb-0 mt-2 login-company">Desarrollos Ordenados S.A.</p>
                 </div>
 
-                {/* Body blanco*/}
+                {/* Body blanco */}
                 <div className="login-body">
 
                     {/* Alerta de error */}
@@ -126,7 +126,7 @@ export default function Login() {
                         </div>
                     )}
 
-                    {/* Alerta informativa */}
+                    {/* Alerta informativa (logout, nosesion, expirada) */}
                     {mostrarInfo && (
                         <div className="alert alert-warning alert-dismissible fade show" role="alert">
                             <i className="fas fa-info-circle mr-2" aria-hidden="true" />
@@ -191,7 +191,7 @@ export default function Login() {
                             {cargando ? (
                                 <>
                                     <span
-                                        className="spinner-border spinner-border-sm mr-2"
+                                        className="spinner-border spinner-border-sm"
                                         role="status"
                                         aria-hidden="true"
                                     />
