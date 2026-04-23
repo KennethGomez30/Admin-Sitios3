@@ -6,7 +6,6 @@ import '../styles/login.css'
 // Mensajes por código de query param 
 const MENSAJES_INFO = {
     nosesion: 'Por favor inicie sesión para utilizar el sistema.',
-    expirada: 'Su sesión ha expirado por inactividad. Por favor inicie sesión nuevamente.',
     logout: 'Ha cerrado sesión correctamente.',
 }
 
