@@ -2,8 +2,8 @@ import { ENV } from '../config/env'
 
 const BASE_URL = ENV.TERCEROS_API_URL
 
-async function handleResponse(res, successStatus = 200) {
-    // 204 No Content DELETE exitoso sin body
+async function handleResponse(res) {
+    // 204 No Content — DELETE exitoso sin body
     if (res.status === 204) return { statusCode: 204 }
 
     let data
@@ -13,21 +13,8 @@ async function handleResponse(res, successStatus = 200) {
         throw new Error(`Error de servidor (HTTP ${res.status}). Intente de nuevo.`)
     }
 
-    // Respuesta exitosa el backend devuelve el objeto/array directamente
-    if (res.ok) {
-        return {
-            statusCode: successStatus,
-            message: 'OK',
-            responseObject: data,
-        }
-    }
-
-    const message = data?.message ?? data?.Message ?? data?.title ?? `Error HTTP ${res.status}`
-    return {
-        statusCode: res.status,
-        message,
-        responseObject: null,
-    }
+    // El backend siempre retorna BusinessLogicResponse: { statusCode, message, responseObject }
+    return data
 }
 
 // Servicio exportado
@@ -45,7 +32,7 @@ export const terceroService = {
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
-        return handleResponse(res, 200)
+        return handleResponse(res)
     },
 
     /**
@@ -60,7 +47,7 @@ export const terceroService = {
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
-        return handleResponse(res, 200)
+        return handleResponse(res)
     },
 
     /**
@@ -77,7 +64,7 @@ export const terceroService = {
             },
             body: JSON.stringify(payload),
         })
-        return handleResponse(res, 201)
+        return handleResponse(res)
     },
 
     /**
@@ -94,12 +81,12 @@ export const terceroService = {
             },
             body: JSON.stringify(payload),
         })
-        return handleResponse(res, 200)
+        return handleResponse(res)
     },
 
     /**
      * DELETE /api/Terceros/{id}
-     * @returns {Promise<{ statusCode, message }>}
+     * @returns {Promise<{ statusCode: 204 }>}
      */
     async eliminar(id, accessToken) {
         const res = await fetch(`${BASE_URL}/${id}`, {
@@ -109,6 +96,6 @@ export const terceroService = {
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
-        return handleResponse(res, 204)
+        return handleResponse(res)
     },
 }
