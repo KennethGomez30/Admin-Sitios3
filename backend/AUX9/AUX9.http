@@ -1,0 +1,6 @@
+@AUX9_HostAddress = http://localhost:5093
+
+GET {{AUX9_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
