@@ -2,6 +2,7 @@
   <Project Path="AUX1/AUX1.csproj" Id="df82e18c-520a-47a8-9bab-115b7027efc9" />
   <Project Path="AUX5/AUX5.csproj" Id="2c316b44-eb17-4d19-83e6-ed22ee6cea68" />
   <Project Path="AUX7/AUX7.csproj" Id="ba8efb7b-f0ce-4ad3-b650-0263097e7a64" />
+  <Project Path="AUX8Correcta/AUX8Correcta.csproj" Id="0e6b16dd-ab2f-4aa8-bbf9-1a8e640e7319" />
   <Project Path="Bitacora/Bitacora.csproj" Id="107eaabf-601e-4446-b239-b7a978b6c98b" />
   <Project Path="PERMISOS/PERMISOS.csproj" Id="a2c4f055-c77e-42a3-902d-1bbf4749b43b" />
 </Solution>

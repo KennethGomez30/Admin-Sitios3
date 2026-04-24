@@ -1,0 +1,6 @@
+@AUX8Correcta_HostAddress = http://localhost:5071
+
+GET {{AUX8Correcta_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
