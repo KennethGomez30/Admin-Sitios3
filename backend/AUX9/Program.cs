@@ -1,7 +1,6 @@
 using AUX9;
 using AUX9.Repository;
 using AUX9.Services;
-using Microsoft.AspNetCore.Connections;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +21,9 @@ builder.Services.AddCors(options =>
 // HttpClient para Bitácora
 builder.Services.AddHttpClient("Bitacora");
 
+// HttpClient para AUX1 (validación de tokens)
+builder.Services.AddHttpClient("AUX1");
+
 // Infraestructura de base de datos
 builder.Services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
 
@@ -31,6 +33,7 @@ builder.Services.AddScoped<ITerceroRepository, TerceroRepository>();
 // Servicios
 builder.Services.AddScoped<ITerceroService, TerceroService>();
 builder.Services.AddScoped<IBitacoraService, BitacoraService>();
+builder.Services.AddScoped<IAux1Service, Aux1Service>();
 
 var app = builder.Build();
 

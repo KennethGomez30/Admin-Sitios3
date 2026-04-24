@@ -13,10 +13,15 @@ namespace AUX9
                 .RequireCors("AllowAll");
 
             // GET /api/ReporteTerceros/terceros
-            // Devuelve la lista de terceros para el select del filtro
             group.MapGet("/terceros", async (
-                [FromServices] ITerceroService svc) =>
+                [FromServices] ITerceroService svc,
+                [FromServices] IAux1Service auth,
+                [FromHeader(Name = "Authorization")] string? authorization) =>
             {
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
+
                 var result = await svc.ObtenerTercerosAsync();
                 return result.StatusCode == 200
                     ? Results.Ok(result)
@@ -24,11 +29,10 @@ namespace AUX9
             }).WithName("ObtenerTerceros").WithOpenApi();
 
             // GET /api/ReporteTerceros/movimientos
-            // Filtros: tercero_id (obligatorio), fecha_inicio, fecha_fin, periodo_id, estado, pagina
-            // Devuelve movimientos paginados (10 por página) + total
             group.MapGet("/movimientos", async (
                 [FromServices] ITerceroService svc,
-                HttpContext ctx,
+                [FromServices] IAux1Service auth,
+                [FromHeader(Name = "Authorization")] string? authorization,
                 [FromQuery] int tercero_id,
                 [FromQuery] DateTime? fecha_inicio,
                 [FromQuery] DateTime? fecha_fin,
@@ -36,7 +40,9 @@ namespace AUX9
                 [FromQuery] string? estado,
                 [FromQuery] int pagina = 1) =>
             {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new { Message = "No autorizado." }, statusCode: 401);
 
                 var result = await svc.ObtenerMovimientosAsync(
                     tercero_id,
