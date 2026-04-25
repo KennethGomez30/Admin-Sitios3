@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="AUX1/AUX1.csproj" Id="df82e18c-520a-47a8-9bab-115b7027efc9" />
+  <Project Path="AUX11/AUX11.csproj" Id="5108079f-ec9c-4b0f-a660-aea7fbe7f879" />
+  <Project Path="AUX12/AUX12.csproj" Id="eaf38267-5869-4c5f-9584-07cd306211ee" />
   <Project Path="AUX5/AUX5.csproj" Id="2c316b44-eb17-4d19-83e6-ed22ee6cea68" />
   <Project Path="AUX7/AUX7.csproj" Id="ba8efb7b-f0ce-4ad3-b650-0263097e7a64" />
   <Project Path="AUX9/AUX9.csproj" Id="9de97890-fb73-4aa2-aca9-bdabc2634d9f" />
