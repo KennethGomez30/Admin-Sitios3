@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using Microsoft.AspNetCore.Connections;
 using MySql.Data.MySqlClient;
 
 namespace AUX8Correcta.Repository

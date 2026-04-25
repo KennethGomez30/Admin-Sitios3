@@ -1,4 +1,5 @@
 using AUX8Correcta;
+using AUX8Correcta.Endpoints;
 using AUX8Correcta.Repository;
 using AUX8Correcta.Services;
 using Microsoft.AspNetCore.Connections;
@@ -12,24 +13,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
-
-// HttpClient para Bitácora
-builder.Services.AddHttpClient("Bitacora");
-
-// Infraestructura de base de datos
 builder.Services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
 
-// Repositorio
 builder.Services.AddScoped<Itercerosrepository, TercerosRepository>();
-
-// Servicios
-builder.Services.AddScoped<ITercerosservice, Tercerosservice>();
+builder.Services.AddScoped<ITercerosservice, TercerosService>();
 
 var app = builder.Build();
 

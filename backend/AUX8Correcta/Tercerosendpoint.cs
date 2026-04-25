@@ -2,91 +2,63 @@
 using AUX8Correcta.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AUX8Correcta
+namespace AUX8Correcta.Endpoints
 {
     public static class Tercerosendpoint
     {
-        public static void MapTercerosEndpoints(this IEndpointRouteBuilder routes)
+        public static void MapTercerosEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = routes
-                .MapGroup("/api/CentroCosto")
-                .WithTags("CentroCosto")
-                .RequireCors("AllowAll");
+            var group = app.MapGroup("/api/terceros")
+                           .WithTags("Terceros");
 
-            // GET /api/CentroCosto/periodos
-            // Devuelve todos los períodos contables disponibles
-            /* group.MapGet("/periodos", async (
-                [FromServices] ITercerosservice svc) =>
+            // GET periodos
+            group.MapGet("/periodos", async (ITercerosservice service) =>
             {
-                var result = await svc.ObtenerPeriodosAsync();
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ObtenerPeriodos").WithOpenApi();
+                var result = await service.ObtenerPeriodosAsync();
+                return Results.Json(result, statusCode: result.StatusCode);
+            });
 
-            // GET /api/CentroCosto/lineas?periodo_id={id}
-            // Devuelve las líneas de asiento del período con su estado de distribución (index.php)
-            group.MapGet("/lineas", async (
-                [FromServices] ICentroCostoService svc,
-                [FromQuery] int periodo_id) =>
+            // GET lineas por periodo
+            group.MapGet("/lineas/{periodoId:int}", async (int periodoId, ITercerosservice service) =>
             {
-                var result = await svc.ObtenerLineasAsync(periodo_id);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ObtenerLineas").WithOpenApi();
+                var result = await service.ObtenerLineasAsync(periodoId);
+                return Results.Json(result, statusCode: result.StatusCode);
+            });
 
-            // GET /api/CentroCosto/centros
-            // Devuelve todos los centros de costo activos
-            group.MapGet("/centros", async (
-                [FromServices] ICentroCostoService svc) =>
+            // GET detalle + distribuciones
+            group.MapGet("/prorrateo/{detalleId:int}", async (int detalleId, ITercerosservice service) =>
             {
-                var result = await svc.ObtenerCentrosActivosAsync();
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ObtenerCentros").WithOpenApi();
+                var result = await service.ObtenerProrrateoAsync(detalleId);
+                return Results.Json(result, statusCode: result.StatusCode);
+            });
 
-            // GET /api/CentroCosto/prorrateo/{detalleId}
-            // Devuelve el detalle del asiento + distribuciones registradas (prorrateo.php GET)
-            group.MapGet("/prorrateo/{detalleId:int}", async (
-                [FromServices] ICentroCostoService svc,
-                int detalleId) =>
+            // GET terceros activos
+            group.MapGet("/activos", async (ITercerosservice service) =>
             {
-                var result = await svc.ObtenerProrrateoAsync(detalleId);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ObtenerProrrateo").WithOpenApi();
+                var result = await service.ObtenerTercerosActivosAsync();
+                return Results.Json(result, statusCode: result.StatusCode);
+            });
 
-            // POST /api/CentroCosto/prorrateo/agregar
-            // Agrega una distribución de centro de costo a una línea (prorrateo.php accion=agregar)
-            group.MapPost("/prorrateo/agregar", async (
-                [FromServices] ICentroCostoService svc,
-                [FromBody] AgregarDistribucionRequest request,
-                HttpContext ctx) =>
+            // POST agregar distribución
+            group.MapPost("/distribuciones", async (AgregarDistribucionRequest request, ITercerosservice service) =>
             {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.AgregarDistribucionAsync(request, usuario);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("AgregarDistribucion").WithOpenApi();
+                var result = await service.AgregarDistribucionAsync(request, null);
+                return Results.Json(result, statusCode: result.StatusCode);
+            });
 
-            // POST /api/CentroCosto/prorrateo/eliminar
-            // Elimina una distribución de centro de costo (prorrateo.php accion=eliminar)
-            group.MapPost("/prorrateo/eliminar", async (
-                [FromServices] ICentroCostoService svc,
-                [FromBody] EliminarDistribucionRequest request,
-                HttpContext ctx) =>
+            // DELETE eliminar distribución
+            group.MapDelete("/distribuciones/{id:int}", async (int id, int detalleId, ITercerosservice service) =>
             {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.EliminarDistribucionAsync(request, usuario);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("EliminarDistribucion").WithOpenApi();
-            */
+                var request = new EliminarDistribucionRequest
+                {
+                    Id = id,
+                    DetalleId = detalleId
+                };
+
+                var result = await service.EliminarDistribucionAsync(request, null);
+                return Results.Json(result, statusCode: result.StatusCode);
+            });
         }
+
     }
 }
