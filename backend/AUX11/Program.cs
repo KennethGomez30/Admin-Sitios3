@@ -1,32 +1,48 @@
+using AUX11;
+using AUX11.Entities;
+using AUX11.Repository;
+using AUX11.Services;
+using Dapper;                                             
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+DefaultTypeMap.MatchNamesWithUnderscores = true;           
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+// HttpClient para Bitácora
+builder.Services.AddHttpClient("Bitacora");
+
+// Infraestructura de base de datos
+builder.Services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+
+// Repositorio
+builder.Services.AddScoped<IDireccionRepository, DireccionRepository>();
+
+// Servicios
+builder.Services.AddScoped<IBitacoraService, BitacoraService>();
+builder.Services.AddScoped<IDireccionService, DireccionService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-});
+app.MapDireccionEndpoints();
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
