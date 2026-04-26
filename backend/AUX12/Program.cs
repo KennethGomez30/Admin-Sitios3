@@ -1,8 +1,11 @@
-using AUX7;
-using AUX7.Repository;
-using AUX7.Services;
+using AUX12;
+using AUX12.Repository;
+using AUX12.Services;
+using Dapper;
 
 var builder = WebApplication.CreateBuilder(args);
+
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -18,22 +21,18 @@ builder.Services.AddCors(options =>
     });
 });
 
-// HttpClient para Bitácora
+// HttpClient para Bit�cora
 builder.Services.AddHttpClient("Bitacora");
-
-// HttpClient para AUX1 (validación de tokens)
-builder.Services.AddHttpClient("AUX1");
 
 // Infraestructura de base de datos
 builder.Services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
 
 // Repositorio
-builder.Services.AddScoped<ICentroCostoRepository, CentroCostoRepository>();
+builder.Services.AddScoped<IContactoRepository, ContactoRepository>();
 
 // Servicios
-builder.Services.AddScoped<ICentroCostoService, CentroCostoService>();
 builder.Services.AddScoped<IBitacoraService, BitacoraService>();
-builder.Services.AddScoped<IAux1Service, Aux1Service>();
+builder.Services.AddScoped<IContactoService, ContactoService>();
 
 var app = builder.Build();
 
@@ -43,6 +42,6 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 
-app.MapCentroCostoEndpoints();
+app.MapContactoEndpoints();
 
 app.Run();
