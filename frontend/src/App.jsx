@@ -99,6 +99,24 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* ── AUX8: Distribución de Terceros ── */}
+          <Route
+            path="/distribucion-terceros"
+            element={
+              <ProtectedRoute ruta="/distribucion-terceros">
+                <Dashboard><DistribucionTercerosListado /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/distribucion-terceros/prorrateo/:detalleId"
+            element={
+              <ProtectedRoute ruta="/distribucion-terceros">
+                <Dashboard><DistribucionTercerosProrrateo /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
 
           {/* ── AUX9: Reporte de Movimientos por Tercero ── */}
           <Route
