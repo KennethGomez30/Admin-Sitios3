@@ -4,9 +4,9 @@ namespace AUX12.Services;
 
 public interface IContactoService
 {
-    Task<BusinessLogicResponse> ListarPorTerceroAsync(int terceroId, string? usuario);
-    Task<BusinessLogicResponse> ObtenerPorIdAsync(int id, string? usuario);
-    Task<BusinessLogicResponse> CrearAsync(ContactoEntity c, string? usuario);
-    Task<BusinessLogicResponse> ActualizarAsync(int id, ContactoEntity c, string? usuario);
-    Task<BusinessLogicResponse> EliminarAsync(int id, string? usuario);
+    Task<IEnumerable<ContactoEntity>> ListarPorTerceroAsync(int terceroId, string? usuario);
+    Task<ContactoEntity?> ObtenerPorIdAsync(int id, string? usuario);
+    Task<(ContactoEntity? contacto, string? error)> CrearAsync(ContactoEntity contacto, string? usuario);
+    Task<(ContactoEntity? contacto, string? error, bool notFound)> ActualizarAsync(int id, ContactoEntity contacto, string? usuario);
+    Task<(bool ok, string? error, bool notFound)> EliminarAsync(int id, string? usuario);
 }

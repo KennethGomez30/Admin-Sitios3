@@ -24,94 +24,48 @@ public class ContactoService : IContactoService
         _logger = logger;
     }
 
-    // LISTAR por tercero
-    public async Task<BusinessLogicResponse> ListarPorTerceroAsync(int terceroId, string? usuario)
+    // LISTAR
+    public async Task<IEnumerable<ContactoEntity>> ListarPorTerceroAsync(int terceroId, string? usuario)
     {
-        try
-        {
-            if (terceroId <= 0)
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 400,
-                    Message = "Debe indicar un tercero válido."
-                };
+        if (terceroId <= 0)
+            return Enumerable.Empty<ContactoEntity>();
 
-            var contactos = await _repository.ListarPorTerceroAsync(terceroId);
+        var contactos = await _repository.ListarPorTerceroAsync(terceroId);
 
-            _ = _bitacoraService.RegistrarAsync(
-                $"El usuario consulta contactos del tercero {terceroId}",
-                usuario
-            );
+        _ = _bitacoraService.RegistrarAsync(
+            $"El usuario consulta contactos del tercero {terceroId}",
+            usuario
+        );
 
-            return new BusinessLogicResponse
-            {
-                StatusCode = 200,
-                Message = "OK",
-                ResponseObject = contactos
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al listar contactos del tercero {TerceroId}.", terceroId);
-            return new BusinessLogicResponse
-            {
-                StatusCode = 500,
-                Message = "Error interno al listar contactos."
-            };
-        }
+        return contactos;
     }
 
-    // OBTENER por id
-    public async Task<BusinessLogicResponse> ObtenerPorIdAsync(int id, string? usuario)
+    // OBTENER
+    public async Task<ContactoEntity?> ObtenerPorIdAsync(int id, string? usuario)
     {
-        try
-        {
-            var contacto = await _repository.ObtenerPorIdAsync(id);
-            if (contacto is null)
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 404,
-                    Message = "El contacto no existe."
-                };
+        var contacto = await _repository.ObtenerPorIdAsync(id);
+        if (contacto is null)
+            return null;
 
-            _ = _bitacoraService.RegistrarAsync(
-                $"El usuario consulta contacto {id}",
-                usuario
-            );
+        _ = _bitacoraService.RegistrarAsync(
+            $"El usuario consulta contacto {id}",
+            usuario
+        );
 
-            return new BusinessLogicResponse
-            {
-                StatusCode = 200,
-                Message = "OK",
-                ResponseObject = contacto
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener contacto {Id}.", id);
-            return new BusinessLogicResponse
-            {
-                StatusCode = 500,
-                Message = "Error interno al obtener el contacto."
-            };
-        }
+        return contacto;
     }
 
     // CREAR
-    public async Task<BusinessLogicResponse> CrearAsync(ContactoEntity c, string? usuario)
+    public async Task<(ContactoEntity? contacto, string? error)> CrearAsync(ContactoEntity c, string? usuario)
     {
         try
         {
             var errorValidacion = ValidarCamposBasicos(c);
             if (errorValidacion is not null)
-                return new BusinessLogicResponse { StatusCode = 400, Message = errorValidacion };
+                return (null, errorValidacion);
 
             if (!await _repository.ExisteTerceroAsync(c.TerceroId))
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 400,
-                    Message = "El tercero indicado no existe."
-                };
+                return (null, "El tercero indicado no existe.");
 
             c.UsuarioCreacion = usuario;
             c.Id = await _repository.CrearAsync(c);
@@ -121,36 +75,23 @@ public class ContactoService : IContactoService
                 usuario
             );
 
-            return new BusinessLogicResponse
-            {
-                StatusCode = 201,
-                Message = "Contacto creado correctamente.",
-                ResponseObject = c
-            };
+            return (c, null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al crear contacto para tercero {TerceroId}.", c.TerceroId);
-            return new BusinessLogicResponse
-            {
-                StatusCode = 500,
-                Message = "Error interno al crear el contacto."
-            };
+            return (null, "Error interno al crear el contacto.");
         }
     }
 
     // ACTUALIZAR
-    public async Task<BusinessLogicResponse> ActualizarAsync(int id, ContactoEntity c, string? usuario)
+    public async Task<(ContactoEntity? contacto, string? error, bool notFound)> ActualizarAsync(int id, ContactoEntity c, string? usuario)
     {
         try
         {
             var anterior = await _repository.ObtenerPorIdAsync(id);
             if (anterior is null)
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 404,
-                    Message = "El contacto no existe."
-                };
+                return (null, "El contacto no existe.", true);
 
             // No permitir cambiar de tercero al editar
             c.Id = id;
@@ -158,17 +99,13 @@ public class ContactoService : IContactoService
 
             var errorValidacion = ValidarCamposBasicos(c);
             if (errorValidacion is not null)
-                return new BusinessLogicResponse { StatusCode = 400, Message = errorValidacion };
+                return (null, errorValidacion, false);
 
             c.UsuarioModificacion = usuario;
 
             var ok = await _repository.ActualizarAsync(c);
             if (!ok)
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 500,
-                    Message = "No se pudo actualizar el contacto."
-                };
+                return (null, "No se pudo actualizar el contacto.", false);
 
             var actual = await _repository.ObtenerPorIdAsync(id);
 
@@ -177,64 +114,39 @@ public class ContactoService : IContactoService
                 usuario
             );
 
-            return new BusinessLogicResponse
-            {
-                StatusCode = 200,
-                Message = "Contacto actualizado correctamente.",
-                ResponseObject = actual
-            };
+            return (actual, null, false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al actualizar contacto {Id}.", id);
-            return new BusinessLogicResponse
-            {
-                StatusCode = 500,
-                Message = "Error interno al actualizar el contacto."
-            };
+            return (null, "Error interno al actualizar el contacto.", false);
         }
     }
 
     // ELIMINAR
-    public async Task<BusinessLogicResponse> EliminarAsync(int id, string? usuario)
+    public async Task<(bool ok, string? error, bool notFound)> EliminarAsync(int id, string? usuario)
     {
         try
         {
             var actual = await _repository.ObtenerPorIdAsync(id);
             if (actual is null)
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 404,
-                    Message = "El contacto no existe."
-                };
+                return (false, "El contacto no existe.", true);
 
             var ok = await _repository.EliminarAsync(id);
             if (!ok)
-                return new BusinessLogicResponse
-                {
-                    StatusCode = 500,
-                    Message = "No se pudo eliminar el contacto."
-                };
+                return (false, "No se pudo eliminar el contacto.", false);
 
             _ = _bitacoraService.RegistrarAsync(
                 $"Eliminar contacto: {JsonSerializer.Serialize(actual)}",
                 usuario
             );
 
-            return new BusinessLogicResponse
-            {
-                StatusCode = 200,
-                Message = "Contacto eliminado correctamente."
-            };
+            return (true, null, false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al eliminar contacto {Id}.", id);
-            return new BusinessLogicResponse
-            {
-                StatusCode = 409,
-                Message = "No se puede eliminar un registro con datos relacionados."
-            };
+            return (false, "No se puede eliminar un registro con datos relacionados.", false);
         }
     }
 
@@ -259,7 +171,6 @@ public class ContactoService : IContactoService
             if (c.Email.Length > 100)
                 return "El email no debe superar los 100 caracteres.";
 
-            // Validación simple de formato
             if (!Regex.IsMatch(c.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
                 return "El email no tiene un formato válido.";
         }

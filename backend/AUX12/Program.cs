@@ -8,7 +8,35 @@ var builder = WebApplication.CreateBuilder(args);
 DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Pega aquí tu token JWT (sin escribir 'Bearer ', solo el token)"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 builder.Services.AddCors(options =>
 {
@@ -23,6 +51,7 @@ builder.Services.AddCors(options =>
 
 // HttpClient para Bitácora
 builder.Services.AddHttpClient("Bitacora");
+builder.Services.AddHttpClient("AUX1");
 
 // Infraestructura de base de datos
 builder.Services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
@@ -33,6 +62,7 @@ builder.Services.AddScoped<IContactoRepository, ContactoRepository>();
 // Servicios
 builder.Services.AddScoped<IBitacoraService, BitacoraService>();
 builder.Services.AddScoped<IContactoService, ContactoService>();
+builder.Services.AddScoped<IAux1Service, Aux1Service>();
 
 var app = builder.Build();
 
