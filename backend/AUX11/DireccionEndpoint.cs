@@ -1,86 +1,123 @@
 ﻿using AUX11.Entities;
+using AUX11.Services;
 using Microsoft.AspNetCore.Mvc;
-namespace AUX11
+
+namespace AUX11;
+
+public static class DireccionEndpoint
 {
-    public static class DireccionEndpoint
+    public static void MapDireccionEndpoints(this IEndpointRouteBuilder routes)
     {
-        public static void MapDireccionEndpoints(this IEndpointRouteBuilder routes)
+        var group = routes
+            .MapGroup("/api/TerceroDirecciones")
+            .WithTags("TerceroDirecciones")
+            .RequireCors("AllowAll");
+
+        // GET /api/TerceroDirecciones/tercero/{terceroId}
+        group.MapGet("/tercero/{terceroId:int}", async (
+            [FromServices] IAux1Service auth,
+            [FromServices] IDireccionService svc,
+            [FromHeader(Name = "Authorization")] string? authorization,
+            int terceroId) =>
         {
-            var group = routes
-                .MapGroup("/api/TerceroDirecciones")
-                .WithTags("TerceroDirecciones")
-                .RequireCors("AllowAll");
+            var usuario = await auth.ValidarTokenAsync(authorization);
+            if (usuario is null)
+                return Results.Unauthorized();
 
-            // GET /api/TerceroDirecciones/tercero/{terceroId}
-            // Lista todas las direcciones de un tercero (sin paginación)
-            group.MapGet("/tercero/{terceroId:int}", async (
-                [FromServices] IDireccionService svc,
-                HttpContext ctx,
-                int terceroId) =>
-            {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.ListarPorTerceroAsync(terceroId, usuario);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ListarDireccionesPorTercero").WithOpenApi();
+            var direcciones = await svc.ListarPorTerceroAsync(terceroId, usuario);
+            return Results.Ok(direcciones);
+        })
+        .WithName("ListarDireccionesPorTercero")
+        .WithOpenApi();
 
-            // GET /api/TerceroDirecciones/{id}
-            // Obtiene una dirección por id (para precargar el formulario de edición)
-            group.MapGet("/{id:int}", async (
-                [FromServices] IDireccionService svc,
-                HttpContext ctx,
-                int id) =>
-            {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.ObtenerPorIdAsync(id, usuario);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ObtenerDireccionPorId").WithOpenApi();
+        // GET /api/TerceroDirecciones/{id}
+        group.MapGet("/{id:int}", async (
+            [FromServices] IAux1Service auth,
+            [FromServices] IDireccionService svc,
+            [FromHeader(Name = "Authorization")] string? authorization,
+            int id) =>
+        {
+            var usuario = await auth.ValidarTokenAsync(authorization);
+            if (usuario is null)
+                return Results.Unauthorized();
 
-            // POST /api/TerceroDirecciones
-            // Crea una nueva dirección
-            group.MapPost("/", async (
-                [FromServices] IDireccionService svc,
-                HttpContext ctx,
-                [FromBody] DireccionEntity direccion) =>
-            {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.CrearAsync(direccion, usuario);
-                return result.StatusCode == 201
-                    ? Results.Created($"/api/TerceroDirecciones/{((DireccionEntity)result.ResponseObject!).Id}", result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("CrearDireccion").WithOpenApi();
+            var direccion = await svc.ObtenerPorIdAsync(id, usuario);
+            return direccion is null ? Results.NotFound() : Results.Ok(direccion);
+        })
+        .WithName("ObtenerDireccionPorId")
+        .WithOpenApi();
 
-            // PUT /api/TerceroDirecciones/{id}
-            // Actualiza una dirección existente
-            group.MapPut("/{id:int}", async (
-                [FromServices] IDireccionService svc,
-                HttpContext ctx,
-                int id,
-                [FromBody] DireccionEntity direccion) =>
-            {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.ActualizarAsync(id, direccion, usuario);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("ActualizarDireccion").WithOpenApi();
+        // POST /api/TerceroDirecciones
+        group.MapPost("/", async (
+            [FromServices] IAux1Service auth,
+            [FromServices] IDireccionService svc,
+            [FromHeader(Name = "Authorization")] string? authorization,
+            [FromBody] DireccionEntity direccion) =>
+        {
+            var usuario = await auth.ValidarTokenAsync(authorization);
+            if (usuario is null)
+                return Results.Unauthorized();
 
-            // DELETE /api/TerceroDirecciones/{id}
-            // Elimina una dirección
-            group.MapDelete("/{id:int}", async (
-                [FromServices] IDireccionService svc,
-                HttpContext ctx,
-                int id) =>
-            {
-                var usuario = ctx.Request.Headers["X-Usuario"].FirstOrDefault();
-                var result = await svc.EliminarAsync(id, usuario);
-                return result.StatusCode == 200
-                    ? Results.Ok(result)
-                    : Results.Json(result, statusCode: result.StatusCode);
-            }).WithName("EliminarDireccion").WithOpenApi();
-        }
+            var (creada, error) = await svc.CrearAsync(direccion, usuario);
+
+            if (creada is null)
+                return Results.BadRequest(new { message = error });
+
+            return Results.Created($"/api/TerceroDirecciones/{creada.Id}", creada);
+        })
+        .WithName("CrearDireccion")
+        .WithOpenApi();
+
+        // PUT /api/TerceroDirecciones/{id}
+        group.MapPut("/{id:int}", async (
+            [FromServices] IAux1Service auth,
+            [FromServices] IDireccionService svc,
+            [FromHeader(Name = "Authorization")] string? authorization,
+            int id,
+            [FromBody] DireccionEntity direccion) =>
+        {
+            var usuario = await auth.ValidarTokenAsync(authorization);
+            if (usuario is null)
+                return Results.Unauthorized();
+
+            if (id != direccion.Id && direccion.Id != 0)
+                return Results.BadRequest(new { message = "El ID de la ruta y el del cuerpo no coinciden" });
+
+            var (actualizada, error, notFound) = await svc.ActualizarAsync(id, direccion, usuario);
+
+            if (notFound)
+                return Results.NotFound();
+
+            if (actualizada is null)
+                return Results.BadRequest(new { message = error });
+
+            return Results.Ok(actualizada);
+        })
+        .WithName("ActualizarDireccion")
+        .WithOpenApi();
+
+        // DELETE /api/TerceroDirecciones/{id}
+        group.MapDelete("/{id:int}", async (
+            [FromServices] IAux1Service auth,
+            [FromServices] IDireccionService svc,
+            [FromHeader(Name = "Authorization")] string? authorization,
+            int id) =>
+        {
+            var usuario = await auth.ValidarTokenAsync(authorization);
+            if (usuario is null)
+                return Results.Unauthorized();
+
+            var (ok, error, notFound) = await svc.EliminarAsync(id, usuario);
+
+            if (notFound)
+                return Results.NotFound();
+
+            if (!ok)
+                return Results.Conflict(new { message = error });
+
+            return Results.NoContent();
+        })
+        .WithName("EliminarDireccion")
+        .WithOpenApi();
     }
 }

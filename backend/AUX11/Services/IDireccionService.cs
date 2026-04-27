@@ -2,10 +2,10 @@
 {
     public interface IDireccionService
     {
-        Task<BusinessLogicResponse> ListarPorTerceroAsync(int terceroId, string? usuario);
-        Task<BusinessLogicResponse> ObtenerPorIdAsync(int id, string? usuario);
-        Task<BusinessLogicResponse> CrearAsync(DireccionEntity d, string? usuario);
-        Task<BusinessLogicResponse> ActualizarAsync(int id, DireccionEntity d, string? usuario);
-        Task<BusinessLogicResponse> EliminarAsync(int id, string? usuario);
+        Task<IEnumerable<DireccionEntity>> ListarPorTerceroAsync(int terceroId, string? usuario);
+        Task<DireccionEntity?> ObtenerPorIdAsync(int id, string? usuario);
+        Task<(DireccionEntity? direccion, string? error)> CrearAsync(DireccionEntity direccion, string? usuario);
+        Task<(DireccionEntity? direccion, string? error, bool notFound)> ActualizarAsync(int id, DireccionEntity direccion, string? usuario);
+        Task<(bool ok, string? error, bool notFound)> EliminarAsync(int id, string? usuario);
     }
 }
