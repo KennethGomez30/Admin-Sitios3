@@ -67,6 +67,12 @@ namespace AUX11.Services
                     return (null, "El tercero indicado no existe.");
 
                 d.UsuarioCreacion = usuario;
+
+                // Regla: solo una dirección puede ser principal por tercero.
+                // Si la nueva viene como principal, desmarcar las anteriores.
+                if (d.EsPrincipal)
+                    await _repository.QuitarPrincipalDeTerceroAsync(d.TerceroId);   // ← ¡esta línea!
+
                 d.Id = await _repository.CrearAsync(d);
 
                 _ = _bitacoraService.RegistrarAsync(
@@ -101,6 +107,11 @@ namespace AUX11.Services
                     return (null, errorValidacion, false);
 
                 d.UsuarioModificacion = usuario;
+
+                // Regla del principal único:
+                // si esta dirección queda como principal, desmarcar las OTRAS del tercero.
+                if (d.EsPrincipal)
+                    await _repository.QuitarPrincipalDeTerceroAsync(d.TerceroId, exceptoId: id);
 
                 var ok = await _repository.ActualizarAsync(d);
                 if (!ok)

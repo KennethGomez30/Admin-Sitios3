@@ -11,6 +11,10 @@ import TerceroEditar from './components/TerceroEditar'
 import CentroCostoListado from './components/CentroCostoListado'
 import CentroCostoProrrateo from './components/CentroCostoProrrateo'
 import ReporteTerceros from './components/ReporteTerceros'
+// Importaciones para el módulo de Direcciones de Terceros
+import DireccionListado from './components/DireccionListado'
+import DireccionCrear from './components/DireccionCrear'
+import DireccionEditar from './components/DireccionEditar'
 
 function NavegadorConectado() {
   const navigate = useNavigate()
@@ -100,6 +104,40 @@ export default function App() {
                 <Dashboard><ReporteTerceros /></Dashboard>
               </ProtectedRoute>
             }
+          />
+
+          {/* Módulo Direcciones de Terceros */}
+          <Route
+              path="/terceros/:terceroId/direcciones"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <DireccionListado />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path="/terceros/:terceroId/direcciones/crear"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <DireccionCrear />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path="/terceros/:terceroId/direcciones/editar/:id"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <DireccionEditar />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
           />
 
           {/* Comodín */}
