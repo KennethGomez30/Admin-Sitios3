@@ -330,7 +330,7 @@ export default function TerceroListado() {
                                                         </button>
                                                         
                                                         <button
-                                                            className="btn btn-sm btn-success"
+                                                            className="btn btn-sm btn-info"
                                                             title="Contactos"
                                                             onClick={() => navigate(`/terceros/${t.id}/contactos`)}
                                                         >
