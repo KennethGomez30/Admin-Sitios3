@@ -15,7 +15,7 @@ const KEYS = {
 }
 
 // Tiempo de inactividad máximo: 5 minutos
-const INACTIVIDAD_MS = 5 * 60 * 1000
+const INACTIVIDAD_MS = 15 * 1000
 
 // Delay que se muestra el modal antes de redirigir al login
 const DELAY_MODAL_MS = 3000
@@ -72,7 +72,6 @@ function mapearTokensAux1(obj) {
 function ModalSesionExpirada({ visible }) {
     const [mostrar, setMostrar] = useState(false)
 
-    // Pequeño delay para que el fade-in se vea
     useEffect(() => {
         if (!visible) { setMostrar(false); return }
         const id = setTimeout(() => setMostrar(true), 50)
@@ -150,8 +149,6 @@ export function AuthProvider({ children }) {
         return !!(localStorage.getItem(KEYS.ACCESS) && localStorage.getItem(KEYS.REFRESH))
     })
     const [motivoCierre, setMotivoCierre] = useState(null)
-
-    // Estado intermedio: true mientras se muestra el modal ANTES de limpiar user
     const [sesionExpirando, setSesionExpirando] = useState(false)
 
     const refreshTimerRef = useRef(null)
@@ -161,6 +158,10 @@ export function AuthProvider({ children }) {
     const ultimaActividadRef = useRef(null)
     const actividadHandlerRef = useRef(null)
     const navegarRef = useRef(null)
+
+    // Bandera en ref para evitar que cerrarSesion se llame más de una vez
+    // (ej: múltiples clicks rápidos cuando ya está expirando)
+    const cerrandoRef = useRef(false)
 
     userRef.current = user
 
@@ -176,29 +177,29 @@ export function AuthProvider({ children }) {
         const accessToken = llamarApi ? localStorage.getItem(KEYS.ACCESS) : null
 
         if (motivo === 'expirada') {
-
+            // Mostrar modal. ProtectedRoute devuelve children mientras
+            // sesionExpirando === true, así la página actual permanece visible.
             setSesionExpirando(true)
 
             setTimeout(() => {
-                // Limpiar localStorage primero
                 limpiarSesion()
+                setMotivoCierre('expirada')
+                setUser(null)
+                cerrandoRef.current = false
+                setSesionExpirando(false)
+
                 if (navegarRef.current) {
                     navegarRef.current('/login', { replace: true })
                 }
-                // Limpiar estado React después de la navegación
-                setMotivoCierre('expirada')
-                setUser(null)
-                setSesionExpirando(false)
             }, DELAY_MODAL_MS)
 
         } else {
-            // Flujo logout normal: limpiar inmediatamente
             limpiarSesion()
             setMotivoCierre(motivo)
             setUser(null)
+            cerrandoRef.current = false
         }
 
-        // Llamar al API de logout en segundo plano
         if (accessToken) {
             authService.logout(accessToken).catch(() => { /* ignorar */ })
         }
@@ -243,16 +244,27 @@ export function AuthProvider({ children }) {
     const iniciarInactividad = useCallback(() => {
         if (actividadHandlerRef.current) {
             window.removeEventListener('click', actividadHandlerRef.current, true)
+            actividadHandlerRef.current = null
         }
 
+        cerrandoRef.current = false
         ultimaActividadRef.current = Date.now()
 
         const handler = (e) => {
+            // Si ya se está procesando el cierre, bloquear cualquier click adicional
+            if (cerrandoRef.current) {
+                e.preventDefault()
+                e.stopPropagation()
+                return
+            }
+
             if (!userRef.current) return
 
-            const inactivo = Date.now() - ultimaActividadRef.current > INACTIVIDAD_MS
+            const inactivo = Date.now() - ultimaActividadRef.current >= INACTIVIDAD_MS
 
             if (inactivo) {
+                // Marcar que estamos cerrando para ignorar clicks posteriores
+                cerrandoRef.current = true
                 e.preventDefault()
                 e.stopPropagation()
                 cerrarSesionRef.current(false, 'expirada')
@@ -343,7 +355,8 @@ export function AuthProvider({ children }) {
                 window.removeEventListener('click', actividadHandlerRef.current, true)
             }
         }
-    }, [iniciarInactividad])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
         <AuthContext.Provider value={{ user, loading, motivoCierre, sesionExpirando, iniciarSesion, cerrarSesion, navegarRef }}>
