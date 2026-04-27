@@ -11,5 +11,5 @@ namespace AUX11.Repository
         Task<bool> EliminarAsync(int id);
         Task<bool> ExisteTerceroAsync(int terceroId);
         Task<bool> QuitarPrincipalDeTerceroAsync(int terceroId, int? exceptoId = null);
-    }
+    } 
 }
