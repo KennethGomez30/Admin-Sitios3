@@ -49,6 +49,35 @@ export default function DistribucionTercerosProrrateo() {
         return estado === 'EA3' || estado === 'EA4'
     }, [detalle])
 
+    const estaBalanceado = useMemo(() => {
+        return Math.abs(pendiente) < 0.009
+    }, [pendiente])
+
+    const puedeAgregar = puedeModificar && !estaBalanceado
+
+    const validarFormulario = () => {
+        const errores = []
+        const montoNumero = Number(monto)
+
+        if (!terceroId || Number(terceroId) <= 0) {
+            errores.push('Debe seleccionar un tercero.')
+        }
+
+        if (!monto || Number.isNaN(montoNumero) || montoNumero <= 0) {
+            errores.push('El monto debe ser mayor a cero.')
+        }
+
+        if (estaBalanceado) {
+            errores.push('La línea ya está balanceada. Para agregar otra distribución, primero elimine una existente.')
+        }
+
+        if (montoNumero > 0 && montoNumero - pendiente > 0.009) {
+            errores.push('La distribución excede el monto pendiente de la línea.')
+        }
+
+        return errores
+    }
+
     const cargarDatos = async () => {
         setCargando(true)
         setErrorCarga('')
@@ -79,6 +108,13 @@ export default function DistribucionTercerosProrrateo() {
 
     const handleAgregar = async (e) => {
         e.preventDefault()
+        setErrorCarga('')
+
+        const errores = validarFormulario()
+        if (errores.length > 0) {
+            setErrorCarga(errores.join(' '))
+            return
+        }
 
         try {
             const payload = {
@@ -94,8 +130,8 @@ export default function DistribucionTercerosProrrateo() {
             } else {
                 setErrorCarga(data.message ?? 'No fue posible registrar la distribución.')
             }
-        } catch {
-            setErrorCarga('No se pudo conectar con el servidor.')
+        } catch (err) {
+            setErrorCarga(err.message || 'No se pudo conectar con el servidor.')
         }
     }
 
@@ -108,8 +144,8 @@ export default function DistribucionTercerosProrrateo() {
             } else {
                 setErrorCarga(data.message ?? 'No fue posible eliminar la distribución.')
             }
-        } catch {
-            setErrorCarga('No se pudo conectar con el servidor.')
+        } catch (err) {
+            setErrorCarga(err.message || 'No se pudo conectar con el servidor.')
         }
     }
 
@@ -210,7 +246,7 @@ export default function DistribucionTercerosProrrateo() {
                     <h6 className="m-0 font-weight-bold text-primary">Agregar distribución</h6>
                 </div>
                 <div className="card-body">
-                    {puedeModificar ? (
+                    {puedeAgregar ? (
                         <form onSubmit={handleAgregar}>
                             <div className="form-row">
                                 <div className="form-group col-md-6">
@@ -236,7 +272,8 @@ export default function DistribucionTercerosProrrateo() {
                                         id="monto"
                                         type="number"
                                         step="0.01"
-                                        min="0"
+                                        min="0.01"
+                                        max={pendiente > 0 ? pendiente : 0}
                                         className="form-control"
                                         value={monto}
                                         onChange={(e) => setMonto(e.target.value)}
@@ -244,7 +281,7 @@ export default function DistribucionTercerosProrrateo() {
                                 </div>
 
                                 <div className="form-group col-md-2 d-flex align-items-end">
-                                    <button type="submit" className="btn btn-primary btn-block">
+                                    <button type="submit" className="btn btn-primary btn-block" disabled={!puedeAgregar}>
                                         <i className="fas fa-plus" aria-hidden="true" /> Agregar
                                     </button>
                                 </div>
@@ -252,7 +289,9 @@ export default function DistribucionTercerosProrrateo() {
                         </form>
                     ) : (
                         <div className="alert alert-warning mb-0">
-                            Este asiento no permite modificar distribuciones.
+                            {!puedeModificar
+                                ? 'Este asiento no permite modificar distribuciones.'
+                                : 'La línea ya está balanceada. Para agregar otra distribución, elimine una existente primero.'}
                         </div>
                     )}
                 </div>

@@ -9,15 +9,19 @@ async function handleResponse(res) {
     } catch {
         throw new Error(`Error de servidor (HTTP ${res.status}). Intente de nuevo.`)
     }
+
+    if (!res.ok && data?.message) {
+        throw new Error(data.message)
+    }
+
     return data
 }
 
-export const distribucionTercerosService = {
+export const tercerosService = {
     async listarPeriodos(accessToken) {
         const res = await fetch(`${BASE_URL}/periodos`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
@@ -28,7 +32,6 @@ export const distribucionTercerosService = {
         const res = await fetch(`${BASE_URL}/lineas/${periodoId}`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
@@ -39,7 +42,6 @@ export const distribucionTercerosService = {
         const res = await fetch(`${BASE_URL}/prorrateo/${detalleId}`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
@@ -50,7 +52,6 @@ export const distribucionTercerosService = {
         const res = await fetch(`${BASE_URL}/activos`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
@@ -73,7 +74,6 @@ export const distribucionTercerosService = {
         const res = await fetch(`${BASE_URL}/distribuciones/${id}?detalleId=${detalleId}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`,
             },
         })
