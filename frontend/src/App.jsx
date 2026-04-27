@@ -19,6 +19,8 @@ import DireccionEditar from './components/DireccionEditar'
 import ContactoListado from './components/ContactoListado'
 import ContactoCrear from './components/ContactoCrear'
 import ContactoEditar from './components/ContactoEditar'
+import DistribucionTercerosListado from './components/DistribucionTercerosListado'
+import DistribucionTercerosProrrateo from './components/DistribucionTercerosProrrateo'
 
 function NavegadorConectado() {
   const navigate = useNavigate()
