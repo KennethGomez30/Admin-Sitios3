@@ -329,13 +329,14 @@ export default function TerceroListado() {
                                                             <i className="fas fa-map-marker-alt" aria-hidden="true" />
                                                         </button>
                                                         
-                                                        <a
-                                                            href={`../AUX12/index.php?tercero_id=${t.id}`}
+                                                        <button
                                                             className="btn btn-sm btn-info"
                                                             title="Contactos"
+                                                            onClick={() => navigate(`/terceros/${t.id}/contactos`)}
                                                         >
                                                             <i className="fas fa-address-book" aria-hidden="true" />
-                                                        </a>
+                                                        </button>
+                                                        
                                                         <button
                                                             className="btn btn-sm btn-danger btn-eliminar"
                                                             title="Eliminar"

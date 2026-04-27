@@ -11,10 +11,14 @@ import TerceroEditar from './components/TerceroEditar'
 import CentroCostoListado from './components/CentroCostoListado'
 import CentroCostoProrrateo from './components/CentroCostoProrrateo'
 import ReporteTerceros from './components/ReporteTerceros'
-// Importaciones para el módulo de Direcciones de Terceros
+// Modulo de Direcciones de Terceros
 import DireccionListado from './components/DireccionListado'
 import DireccionCrear from './components/DireccionCrear'
 import DireccionEditar from './components/DireccionEditar'
+// Modulo de Contactos
+import ContactoListado from './components/ContactoListado'
+import ContactoCrear from './components/ContactoCrear'
+import ContactoEditar from './components/ContactoEditar'
 
 function NavegadorConectado() {
   const navigate = useNavigate()
@@ -117,7 +121,6 @@ export default function App() {
                   </ProtectedRoute>
               }
           />
-
           <Route
               path="/terceros/:terceroId/direcciones/crear"
               element={
@@ -128,13 +131,44 @@ export default function App() {
                   </ProtectedRoute>
               }
           />
-
           <Route
               path="/terceros/:terceroId/direcciones/editar/:id"
               element={
                   <ProtectedRoute ruta="/terceros">
                       <Dashboard>
                           <DireccionEditar />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+
+          {/* Módulo Contactos de Terceros */}
+          <Route
+              path="/terceros/:terceroId/contactos"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <ContactoListado />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/terceros/:terceroId/contactos/crear"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <ContactoCrear />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/terceros/:terceroId/contactos/editar/:id"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <ContactoEditar />
                       </Dashboard>
                   </ProtectedRoute>
               }
