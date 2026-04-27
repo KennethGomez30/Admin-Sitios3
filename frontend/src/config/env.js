@@ -4,4 +4,5 @@ export const ENV = {
     PERMISOS_API_URL:        import.meta.env.VITE_PERMISOS_API_URL,
     CENTRO_COSTO_API_URL:    import.meta.env.VITE_CENTRO_COSTO_API_URL,
     REPORTE_TERCEROS_API_URL: import.meta.env.VITE_REPORTE_TERCEROS_API_URL,
+    AUX8_API_URL: import.meta.env.VITE_AUX8_API_URL,
 }

@@ -11,6 +11,8 @@ import TerceroEditar from './components/TerceroEditar'
 import CentroCostoListado from './components/CentroCostoListado'
 import CentroCostoProrrateo from './components/CentroCostoProrrateo'
 import ReporteTerceros from './components/ReporteTerceros'
+import DistribucionTercerosListado from './components/DistribucionTercerosListado'
+import DistribucionTercerosProrrateo from './components/DistribucionTercerosProrrateo'
 
 function NavegadorConectado() {
   const navigate = useNavigate()
@@ -88,6 +90,25 @@ export default function App() {
             element={
               <ProtectedRoute ruta="/centro-costo">
                 <Dashboard><CentroCostoProrrateo /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ── AUX8: Distribución de Terceros ── */}
+          <Route
+            path="/distribucion-terceros"
+            element={
+              <ProtectedRoute ruta="/distribucion-terceros">
+                <Dashboard><DistribucionTercerosListado /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/distribucion-terceros/prorrateo/:detalleId"
+            element={
+              <ProtectedRoute ruta="/distribucion-terceros">
+                <Dashboard><DistribucionTercerosProrrateo /></Dashboard>
               </ProtectedRoute>
             }
           />

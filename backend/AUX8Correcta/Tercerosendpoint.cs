@@ -4,61 +4,132 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AUX8Correcta.Endpoints
 {
-    public static class Tercerosendpoint
+    public static class TercerosEndpoint
     {
         public static void MapTercerosEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/terceros")
-                           .WithTags("Terceros");
+            var group = app.MapGroup("/api/Terceros")
+                           .WithTags("Terceros")
+                           .RequireCors("AllowAll");
 
-            // GET periodos
-            group.MapGet("/periodos", async (ITercerosservice service) =>
+            // GET /api/Terceros/periodos
+            group.MapGet("/periodos", async (
+                [FromServices] IAux1Service auth,
+                [FromServices] ITercerosservice svc,
+                [FromHeader(Name = "Authorization")] string? authorization) =>
             {
-                var result = await service.ObtenerPeriodosAsync();
-                return Results.Json(result, statusCode: result.StatusCode);
-            });
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." }, statusCode: 401);
 
-            // GET lineas por periodo
-            group.MapGet("/lineas/{periodoId:int}", async (int periodoId, ITercerosservice service) =>
-            {
-                var result = await service.ObtenerLineasAsync(periodoId);
-                return Results.Json(result, statusCode: result.StatusCode);
-            });
+                var result = await svc.ObtenerPeriodosAsync();
+                return result.StatusCode == 200
+                    ? Results.Ok(result)
+                    : Results.Json(result, statusCode: result.StatusCode);
+            })
+            .WithName("Terceros_Periodos")
+            .WithOpenApi();
 
-            // GET detalle + distribuciones
-            group.MapGet("/prorrateo/{detalleId:int}", async (int detalleId, ITercerosservice service) =>
+            // GET /api/Terceros/lineas/{periodoId}
+            group.MapGet("/lineas/{periodoId:int}", async (
+                int periodoId,
+                [FromServices] IAux1Service auth,
+                [FromServices] ITercerosservice svc,
+                [FromHeader(Name = "Authorization")] string? authorization) =>
             {
-                var result = await service.ObtenerProrrateoAsync(detalleId);
-                return Results.Json(result, statusCode: result.StatusCode);
-            });
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." }, statusCode: 401);
 
-            // GET terceros activos
-            group.MapGet("/activos", async (ITercerosservice service) =>
-            {
-                var result = await service.ObtenerTercerosActivosAsync();
-                return Results.Json(result, statusCode: result.StatusCode);
-            });
+                var result = await svc.ObtenerLineasAsync(periodoId);
+                return result.StatusCode == 200
+                    ? Results.Ok(result)
+                    : Results.Json(result, statusCode: result.StatusCode);
+            })
+            .WithName("Terceros_Lineas")
+            .WithOpenApi();
 
-            // POST agregar distribución
-            group.MapPost("/distribuciones", async (AgregarDistribucionRequest request, ITercerosservice service) =>
+            // GET /api/Terceros/prorrateo/{detalleId}
+            group.MapGet("/prorrateo/{detalleId:int}", async (
+                int detalleId,
+                [FromServices] IAux1Service auth,
+                [FromServices] ITercerosservice svc,
+                [FromHeader(Name = "Authorization")] string? authorization) =>
             {
-                var result = await service.AgregarDistribucionAsync(request, null);
-                return Results.Json(result, statusCode: result.StatusCode);
-            });
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." }, statusCode: 401);
 
-            // DELETE eliminar distribución
-            group.MapDelete("/distribuciones/{id:int}", async (int id, int detalleId, ITercerosservice service) =>
+                var result = await svc.ObtenerProrrateoAsync(detalleId);
+                return result.StatusCode == 200
+                    ? Results.Ok(result)
+                    : Results.Json(result, statusCode: result.StatusCode);
+            })
+            .WithName("Terceros_Prorrateo")
+            .WithOpenApi();
+
+            // GET /api/Terceros/activos
+            group.MapGet("/activos", async (
+                [FromServices] IAux1Service auth,
+                [FromServices] ITercerosservice svc,
+                [FromHeader(Name = "Authorization")] string? authorization) =>
             {
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." }, statusCode: 401);
+
+                var result = await svc.ObtenerTercerosActivosAsync();
+                return result.StatusCode == 200
+                    ? Results.Ok(result)
+                    : Results.Json(result, statusCode: result.StatusCode);
+            })
+            .WithName("Terceros_Activos")
+            .WithOpenApi();
+
+            // POST /api/Terceros/distribuciones
+            group.MapPost("/distribuciones", async (
+                [FromServices] IAux1Service auth,
+                [FromServices] ITercerosservice svc,
+                [FromHeader(Name = "Authorization")] string? authorization,
+                [FromBody] AgregarDistribucionRequest request) =>
+            {
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." }, statusCode: 401);
+
+                var result = await svc.AgregarDistribucionAsync(request, usuario);
+                return result.StatusCode == 200
+                    ? Results.Ok(result)
+                    : Results.Json(result, statusCode: result.StatusCode);
+            })
+            .WithName("Terceros_AgregarDistribucion")
+            .WithOpenApi();
+
+            // DELETE /api/Terceros/distribuciones/{id}?detalleId=23
+            group.MapDelete("/distribuciones/{id:int}", async (
+                int id,
+                [FromQuery] int detalleId,
+                [FromServices] IAux1Service auth,
+                [FromServices] ITercerosservice svc,
+                [FromHeader(Name = "Authorization")] string? authorization) =>
+            {
+                var usuario = await auth.ValidarTokenAsync(authorization);
+                if (usuario is null)
+                    return Results.Json(new BusinessLogicResponse { StatusCode = 401, Message = "No autorizado." }, statusCode: 401);
+
                 var request = new EliminarDistribucionRequest
                 {
                     Id = id,
                     DetalleId = detalleId
                 };
 
-                var result = await service.EliminarDistribucionAsync(request, null);
-                return Results.Json(result, statusCode: result.StatusCode);
-            });
+                var result = await svc.EliminarDistribucionAsync(request, usuario);
+                return result.StatusCode == 200
+                    ? Results.Ok(result)
+                    : Results.Json(result, statusCode: result.StatusCode);
+            })
+            .WithName("Terceros_EliminarDistribucion")
+            .WithOpenApi();
         }
-
     }
 }
