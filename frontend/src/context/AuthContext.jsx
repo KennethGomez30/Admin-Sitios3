@@ -15,7 +15,7 @@ const KEYS = {
 }
 
 // Tiempo de inactividad máximo: 5 minutos
-const INACTIVIDAD_MS = 15 * 1000
+const INACTIVIDAD_MS = 5 * 60 * 1000
 
 // Delay que se muestra el modal antes de redirigir al login
 const DELAY_MODAL_MS = 3000
