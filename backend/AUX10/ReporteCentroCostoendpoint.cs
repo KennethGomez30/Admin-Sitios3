@@ -1,6 +1,10 @@
-﻿using AUX10.Entities;
-using AUX10.Services;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using AUX10.Entities;
+using AUX10.Services;
 
 namespace AUX10
 {
@@ -20,7 +24,7 @@ namespace AUX10
 				[FromQuery] string? centro_costo,
 				[FromQuery] DateTime? fecha_inicio,
 				[FromQuery] DateTime? fecha_fin,
-				[FromQuery] string ? periodoId,
+				[FromQuery] string? periodoId,
 				[FromQuery] string? estado,
 				[FromQuery] int pagina = 1
 			) =>
@@ -48,10 +52,10 @@ namespace AUX10
 			  .WithOpenApi();
 
 			group.MapGet("/centro-costo", async (
-	        [FromServices] IReporteService svc,
-	        [FromServices] IAux1Service auth,
-	        [FromHeader(Name = "Authorization")] string? authorization
-             ) =>
+				[FromServices] IReporteService svc,
+				[FromServices] IAux1Service auth,
+				[FromHeader(Name = "Authorization")] string? authorization
+			) =>
 			{
 				var usuario = await auth.ValidarTokenAsync(authorization);
 				if (usuario is null)
@@ -60,7 +64,8 @@ namespace AUX10
 				var result = await svc.ListarCentrosCostoAsync(usuario);
 				return Results.Ok(result);
 			})
-            .WithName("ListarCentrosCostoReporte");
+			.WithName("ListarCentrosCostoReporte")
+			.WithOpenApi();
 		}
 
 	}
