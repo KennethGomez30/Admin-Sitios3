@@ -1,29 +1,28 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useMensajeFlash } from '../hooks/useMensajeFlash'
-import { terceroService } from '../services/terceroService'
+import { direccionService } from '../services/direccionService'
 import '../styles/terceros.css'
 
 const POR_PAGINA = 10
 
 // Modal de confirmación de eliminación
-function ModalEliminar({ tercero, onConfirmar, onCancelar, eliminando }) {
+function ModalEliminar({ direccion, onConfirmar, onCancelar, eliminando }) {
     const modalRef = useRef(null)
 
-    // Activar/desactivar Bootstrap modal vía jQuery ya cargado en index.html
     useEffect(() => {
         const $m = window.$(modalRef.current)
-        if (tercero) {
+        if (direccion) {
             $m.modal({ backdrop: 'static', keyboard: false })
             $m.modal('show')
         } else {
             $m.modal('hide')
         }
-    }, [tercero])
+    }, [direccion])
 
     return (
-        <div className="modal fade" id="modalEliminar" tabIndex="-1" role="dialog" ref={modalRef}>
+        <div className="modal fade" id="modalEliminarDir" tabIndex="-1" role="dialog" ref={modalRef}>
             <div className="modal-dialog modal-dialog-centered" role="document">
                 <div className="modal-content">
                     <div className="modal-header bg-danger text-white">
@@ -43,8 +42,8 @@ function ModalEliminar({ tercero, onConfirmar, onCancelar, eliminando }) {
                     <div className="modal-body">
                         <p>¿Realmente desea eliminar el elemento seleccionado?</p>
                         <p>
-                            <strong>Tercero:</strong>{' '}
-                            <span>{tercero?.nombreRazonSocial}</span>
+                            <strong>Dirección:</strong>{' '}
+                            <span>{direccion?.alias}</span>
                         </p>
                     </div>
                     <div className="modal-footer">
@@ -119,63 +118,69 @@ function Paginacion({ paginaAct, totalPags, onChange }) {
 }
 
 // Componente principal
-export default function TerceroListado() {
+export default function DireccionListado() {
+    const { terceroId } = useParams()
     const { user } = useAuth()
     const navigate = useNavigate()
-    const { alerta, cerrar: cerrarAlerta, mostrar: mostrarAlerta, guardar: guardarAlerta } = useMensajeFlash()
+    const { alerta, cerrar: cerrarAlerta, mostrar: mostrarAlerta } = useMensajeFlash()
 
-    const [terceros, setTerceros] = useState([])
+    const [direcciones, setDirecciones] = useState([])
     const [cargando, setCargando] = useState(true)
     const [errorCarga, setErrorCarga] = useState('')
     const [paginaAct, setPaginaAct] = useState(1)
-    const [paraEliminar, setParaEliminar] = useState(null)   // TerceroEntity | null
+    const [paraEliminar, setParaEliminar] = useState(null)
     const [eliminando, setEliminando] = useState(false)
 
-    // Cargar listado completo la paginación es client-side
-    const cargarTerceros = useCallback(async () => {
+    // Cargar listado
+    const cargar = useCallback(async () => {
         setCargando(true)
         setErrorCarga('')
         try {
-            const data = await terceroService.listar(user.accessToken)
-            if (data.statusCode === 200) {
-                setTerceros(data.responseObject ?? [])
+            const result = await direccionService.listarPorTercero(
+                terceroId,
+                user.accessToken
+            )
+            if (result.ok) {
+                setDirecciones(result.data ?? [])
             } else {
-                setErrorCarga(data.message ?? 'Error al cargar terceros.')
+                setErrorCarga(result.message)
             }
-        } catch (err) {
+        } catch {
             setErrorCarga('No se pudo conectar con el servidor.')
         } finally {
             setCargando(false)
         }
-    }, [user.accessToken])
+    }, [terceroId, user.accessToken])
 
     useEffect(() => {
-        cargarTerceros()
-    }, [cargarTerceros])
+        cargar()
+    }, [cargar])
 
     // Paginación client-side
-    const totalPags = Math.max(1, Math.ceil(terceros.length / POR_PAGINA))
+    const totalPags = Math.max(1, Math.ceil(direcciones.length / POR_PAGINA))
     const paginaReal = Math.min(paginaAct, totalPags)
-    const slice = terceros.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA)
+    const slice = direcciones.slice((paginaReal - 1) * POR_PAGINA, paginaReal * POR_PAGINA)
 
     // Eliminar
     const confirmarEliminar = useCallback(async () => {
         if (!paraEliminar) return
         setEliminando(true)
         try {
-            const data = await terceroService.eliminar(paraEliminar.id, user.accessToken)
+            const result = await direccionService.eliminar(
+                paraEliminar.id,
+                user.accessToken
+            )
 
-            if (data.statusCode === 204) {
+            if (result.ok) {
                 setParaEliminar(null)
-                const lista = await terceroService.listar(user.accessToken)
-                if (lista.statusCode === 200) setTerceros(lista.responseObject ?? [])
-                mostrarAlerta('success', 'Tercero eliminado exitosamente.')
-            } else if (data.statusCode === 409) {
+                await cargar()
+                mostrarAlerta('success', 'Dirección eliminada exitosamente.')
+            } else if (result.status === 409) {
                 setParaEliminar(null)
-                mostrarAlerta('danger', 'No se puede eliminar un registro con datos relacionados.')
+                mostrarAlerta('danger', result.message)
             } else {
                 setParaEliminar(null)
-                mostrarAlerta('danger', data.message ?? 'Error al eliminar el tercero. Intente nuevamente.')
+                mostrarAlerta('danger', result.message ?? 'Error al eliminar la dirección.')
             }
         } catch {
             setParaEliminar(null)
@@ -183,30 +188,41 @@ export default function TerceroListado() {
         } finally {
             setEliminando(false)
         }
-    }, [paraEliminar, user.accessToken, mostrarAlerta])
+    }, [paraEliminar, user.accessToken, cargar, mostrarAlerta])
 
-    // Render
+    // Validar terceroId — redirigir antes de renderizar
+    const terceroIdNum = Number(terceroId)
+    if (!terceroId || isNaN(terceroIdNum) || terceroIdNum <= 0) {
+        navigate('/terceros', { replace: true })
+        return null
+    }
+
     return (
         <>
-            {/* Encabezado de página */}
+            {/* Encabezado */}
             <div className="d-sm-flex align-items-center justify-content-between mb-4">
                 <h1 className="h3 mb-0 text-gray-800">
-                    <i className="fas fa-users text-primary" aria-hidden="true" /> Administración de Terceros
+                    <i className="fas fa-map-marker-alt text-primary" aria-hidden="true" /> Direcciones del Tercero
                 </h1>
-                <button
-                    className="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
-                    onClick={() => navigate('/terceros/crear')}
-                >
-                    <i className="fas fa-plus fa-sm text-white-50" aria-hidden="true" /> Nuevo Tercero
-                </button>
+                <div>
+                    <button
+                        className="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm mr-2"
+                        onClick={() => navigate('/terceros')}
+                    >
+                        <i className="fas fa-arrow-left fa-sm text-white-50" aria-hidden="true" /> Volver al Listado
+                    </button>
+                    <button
+                        className="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+                        onClick={() => navigate(`/terceros/${terceroId}/direcciones/crear`)}
+                    >
+                        <i className="fas fa-plus fa-sm text-white-50" aria-hidden="true" /> Nueva Dirección
+                    </button>
+                </div>
             </div>
 
             {/* Alerta flash */}
             {alerta && (
-                <div
-                    className={`alert alert-${alerta.tipo} alert-dismissible fade show`}
-                    role="alert"
-                >
+                <div className={`alert alert-${alerta.tipo} alert-dismissible fade show`} role="alert">
                     <i
                         className={`fas ${alerta.tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2`}
                         aria-hidden="true"
@@ -226,11 +242,11 @@ export default function TerceroListado() {
             {/* Tarjeta con tabla */}
             <div className="card shadow mb-4">
                 <div className="card-header py-3">
-                    <h6 className="m-0 font-weight-bold text-primary">Listado de Terceros</h6>
+                    <h6 className="m-0 font-weight-bold text-primary">Listado de Direcciones</h6>
                 </div>
                 <div className="card-body">
 
-                    {/* Estado cargando */}
+                    {/* Cargando */}
                     {cargando && (
                         <div className="text-center py-4">
                             <span
@@ -243,14 +259,14 @@ export default function TerceroListado() {
                         </div>
                     )}
 
-                    {/* Estado error de carga */}
+                    {/* Error de carga */}
                     {!cargando && errorCarga && (
                         <div className="alert alert-danger" role="alert">
                             <i className="fas fa-exclamation-triangle mr-2" aria-hidden="true" />
                             {errorCarga}
                             <button
                                 className="btn btn-sm btn-link ml-2"
-                                onClick={cargarTerceros}
+                                onClick={cargar}
                             >
                                 Reintentar
                             </button>
@@ -268,11 +284,10 @@ export default function TerceroListado() {
                                 >
                                     <thead className="thead-light">
                                         <tr>
-                                            <th>Identificación</th>
-                                            <th>Nombre / Razón Social</th>
-                                            <th>Tipo</th>
-                                            <th>Email</th>
-                                            <th>Teléfono</th>
+                                            <th>Alias</th>
+                                            <th>Ubicación</th>
+                                            <th>Dirección Exacta</th>
+                                            <th>Principal</th>
                                             <th>Estado</th>
                                             <th>Acciones</th>
                                         </tr>
@@ -281,32 +296,36 @@ export default function TerceroListado() {
                                         {slice.length === 0 ? (
                                             <tr>
                                                 <td
-                                                    colSpan={7}
+                                                    colSpan={6}
                                                     className="text-center text-muted tabla-vacia"
                                                 >
-                                                    <i
-                                                        className="fas fa-inbox fa-2x"
-                                                        aria-hidden="true"
-                                                    />
-                                                    <p className="mb-0">No hay terceros registrados</p>
+                                                    <i className="fas fa-inbox fa-2x" aria-hidden="true" />
+                                                    <p className="mb-0">No hay direcciones registradas</p>
                                                 </td>
                                             </tr>
                                         ) : (
-                                            slice.map((t) => (
-                                                <tr key={t.id}>
-                                                    <td>{t.identificacion}</td>
-                                                    <td>{t.nombreRazonSocial}</td>
-                                                    <td>{t.tipo}</td>
-                                                    <td>{t.email ?? '—'}</td>
-                                                    <td>{t.telefono ?? '—'}</td>
+                                            slice.map((d) => (
+                                                <tr key={d.id}>
+                                                    <td>{d.alias}</td>
+                                                    <td>{d.ubicacion ?? '—'}</td>
+                                                    <td>{d.direccionExacta}</td>
                                                     <td>
-                                                        {t.estado === 'Activo' ? (
+                                                        {d.esPrincipal ? (
+                                                            <span className="badge badge-success">
+                                                                <i className="fas fa-star" aria-hidden="true" /> Sí
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-muted">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        {d.estado === 'Activa' ? (
                                                             <span className="badge badge-primary">
-                                                                {t.estado}
+                                                                {d.estado}
                                                             </span>
                                                         ) : (
                                                             <span className="badge badge-secondary">
-                                                                {t.estado}
+                                                                {d.estado}
                                                             </span>
                                                         )}
                                                     </td>
@@ -315,32 +334,15 @@ export default function TerceroListado() {
                                                             className="btn btn-sm btn-primary"
                                                             title="Editar"
                                                             onClick={() =>
-                                                                navigate(`/terceros/editar/${t.id}`)
+                                                                navigate(`/terceros/${terceroId}/direcciones/editar/${d.id}`)
                                                             }
                                                         >
                                                             <i className="fas fa-edit" aria-hidden="true" />
                                                         </button>
-
-                                                        <button
-                                                            className="btn btn-sm btn-warning"
-                                                            title="Direcciones"
-                                                            onClick={() => navigate(`/terceros/${t.id}/direcciones`)}
-                                                        >
-                                                            <i className="fas fa-map-marker-alt" aria-hidden="true" />
-                                                        </button>
-                                                        
-                                                        <button
-                                                            className="btn btn-sm btn-info"
-                                                            title="Contactos"
-                                                            onClick={() => navigate(`/terceros/${t.id}/contactos`)}
-                                                        >
-                                                            <i className="fas fa-address-book" aria-hidden="true" />
-                                                        </button>
-                                                        
                                                         <button
                                                             className="btn btn-sm btn-danger btn-eliminar"
                                                             title="Eliminar"
-                                                            onClick={() => setParaEliminar(t)}
+                                                            onClick={() => setParaEliminar(d)}
                                                         >
                                                             <i className="fas fa-trash" aria-hidden="true" />
                                                         </button>
@@ -364,7 +366,7 @@ export default function TerceroListado() {
 
             {/* Modal de confirmación de eliminación */}
             <ModalEliminar
-                tercero={paraEliminar}
+                direccion={paraEliminar}
                 onConfirmar={confirmarEliminar}
                 onCancelar={() => setParaEliminar(null)}
                 eliminando={eliminando}

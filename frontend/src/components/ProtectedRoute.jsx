@@ -28,15 +28,19 @@ export function ProtectedRoute({ children, ruta }) {
         )
     }
 
-    // Sesión en proceso de expirar el modal ya está visible
+    // Sesión en proceso de expirar: el modal ya está visible encima de la página.
+    // No redirigir aquí; la navegación la maneja AuthContext tras el delay del modal.
     if (sesionExpirando) {
         return children
     }
 
     // Sin sesión activa
     if (!user) {
+        // Cuando la sesión expiró por inactividad, AuthContext ya se encarga
+        // de navegar a /login después del modal. Si por alguna razón llegamos
+        // aquí con motivoCierre === 'expirada' y el modal ya terminó, dejamos
+        // pasar la redirección a /login sin query param (no mostrar msg=logout).
         if (motivoCierre === 'logout') return <Navigate to="/login?msg=logout" replace />
-        if (motivoCierre === 'expirada') return <Navigate to="/login" replace />
         return <Navigate to="/login?msg=nosesion" replace />
     }
 

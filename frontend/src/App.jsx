@@ -11,10 +11,23 @@ import TerceroEditar from './components/TerceroEditar'
 import CentroCostoListado from './components/CentroCostoListado'
 import CentroCostoProrrateo from './components/CentroCostoProrrateo'
 import ReporteTerceros from './components/ReporteTerceros'
+
 import CentroCostoAdminListado from './components/ListaCentrosCostos'
 import CentroCostoAdminCrear from './components/CentroCostosCrear'
 import CentroCostoEditar from './components/CentroCostoEditar'
 import ReporteCentroCosto from './components/ReporteCentroCosto'
+
+// Modulo de Direcciones de Terceros
+import DireccionListado from './components/DireccionListado'
+import DireccionCrear from './components/DireccionCrear'
+import DireccionEditar from './components/DireccionEditar'
+// Modulo de Contactos
+import ContactoListado from './components/ContactoListado'
+import ContactoCrear from './components/ContactoCrear'
+import ContactoEditar from './components/ContactoEditar'
+import DistribucionTercerosListado from './components/DistribucionTercerosListado'
+import DistribucionTercerosProrrateo from './components/DistribucionTercerosProrrateo'
+
 
 function NavegadorConectado() {
   const navigate = useNavigate()
@@ -95,6 +108,24 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {/* ── AUX8: Distribución de Terceros ── */}
+          <Route
+            path="/distribucion-terceros"
+            element={
+              <ProtectedRoute ruta="/distribucion-terceros">
+                <Dashboard><DistribucionTercerosListado /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/distribucion-terceros/prorrateo/:detalleId"
+            element={
+              <ProtectedRoute ruta="/distribucion-terceros">
+                <Dashboard><DistribucionTercerosProrrateo /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
 
           {/* ── AUX9: Reporte de Movimientos por Tercero ── */}
           <Route
@@ -139,6 +170,70 @@ export default function App() {
                 <Dashboard><ReporteCentroCosto /></Dashboard>
               </ProtectedRoute>
             }
+          />
+
+          {/* Módulo Direcciones de Terceros */}
+          <Route
+              path="/terceros/:terceroId/direcciones"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <DireccionListado />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/terceros/:terceroId/direcciones/crear"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <DireccionCrear />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/terceros/:terceroId/direcciones/editar/:id"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <DireccionEditar />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+
+          {/* Módulo Contactos de Terceros */}
+          <Route
+              path="/terceros/:terceroId/contactos"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <ContactoListado />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/terceros/:terceroId/contactos/crear"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <ContactoCrear />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
+          />
+          <Route
+              path="/terceros/:terceroId/contactos/editar/:id"
+              element={
+                  <ProtectedRoute ruta="/terceros">
+                      <Dashboard>
+                          <ContactoEditar />
+                      </Dashboard>
+                  </ProtectedRoute>
+              }
           />
 
           {/* Comodín */}
