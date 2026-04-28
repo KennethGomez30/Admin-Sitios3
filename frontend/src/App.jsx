@@ -25,6 +25,8 @@ import DireccionEditar from './components/DireccionEditar'
 import ContactoListado from './components/ContactoListado'
 import ContactoCrear from './components/ContactoCrear'
 import ContactoEditar from './components/ContactoEditar'
+
+// Módulo de Distribución de Terceros
 import DistribucionTercerosListado from './components/DistribucionTercerosListado'
 import DistribucionTercerosProrrateo from './components/DistribucionTercerosProrrateo'
 
@@ -43,7 +45,6 @@ function NavegadorConectado() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
         {/* Conecta useNavigate al AuthContext sin romper la jerarquía */}
         <NavegadorConectado />
 
@@ -240,7 +241,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
 
         </Routes>
-      </BrowserRouter>
     </AuthProvider>
   )
 }
