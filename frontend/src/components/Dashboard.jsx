@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import '../styles/sistema.css'
 
-const PROFILE_IMG = '/undraw_profile.svg'
-
+const PROFILE_IMG = `${import.meta.env.BASE_URL}undraw_profile.svg`
 
 // Determina si la ruta es interna (React Router)
 // Todas las pantallas 'RT' tienen rutas que empiezan con '/'

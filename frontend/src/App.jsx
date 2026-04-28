@@ -11,6 +11,12 @@ import TerceroEditar from './components/TerceroEditar'
 import CentroCostoListado from './components/CentroCostoListado'
 import CentroCostoProrrateo from './components/CentroCostoProrrateo'
 import ReporteTerceros from './components/ReporteTerceros'
+
+import CentroCostoAdminListado from './components/ListaCentrosCostos'
+import CentroCostoAdminCrear from './components/CentroCostosCrear'
+import CentroCostoEditar from './components/CentroCostoEditar'
+import ReporteCentroCosto from './components/ReporteCentroCosto'
+
 // Modulo de Direcciones de Terceros
 import DireccionListado from './components/DireccionListado'
 import DireccionCrear from './components/DireccionCrear'
@@ -19,8 +25,11 @@ import DireccionEditar from './components/DireccionEditar'
 import ContactoListado from './components/ContactoListado'
 import ContactoCrear from './components/ContactoCrear'
 import ContactoEditar from './components/ContactoEditar'
+
+// Módulo de Distribución de Terceros
 import DistribucionTercerosListado from './components/DistribucionTercerosListado'
 import DistribucionTercerosProrrateo from './components/DistribucionTercerosProrrateo'
+
 
 function NavegadorConectado() {
   const navigate = useNavigate()
@@ -36,7 +45,6 @@ function NavegadorConectado() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
         {/* Conecta useNavigate al AuthContext sin romper la jerarquía */}
         <NavegadorConectado />
 
@@ -129,6 +137,41 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+       
+      {/* ── AUX6: Administración de Centros de Costo ── */}
+           <Route
+             path="/centro-costo/admin"
+             element={
+              <ProtectedRoute ruta="/centro-costo/admin">
+                <Dashboard><CentroCostoAdminListado /></Dashboard>
+              </ProtectedRoute>
+              } 
+           />
+            <Route
+              path="/centro-costo/crear"
+              element={
+                <ProtectedRoute ruta="/centro-costo/admin">
+                  <Dashboard><CentroCostoAdminCrear /></Dashboard>
+                </ProtectedRoute>
+                }
+            />
+          <Route
+            path="/centro-costo/editar/:codigo"
+            element={
+            <ProtectedRoute ruta="/centro-costo/admin">
+              <Dashboard><CentroCostoEditar /></Dashboard>
+            </ProtectedRoute>
+            }
+          /> 
+
+          <Route
+            path="/reporte-centro-costo"
+            element={
+              <ProtectedRoute ruta="/reporte-centro-costo">
+                <Dashboard><ReporteCentroCosto /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Módulo Direcciones de Terceros */}
           <Route
@@ -198,7 +241,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
 
         </Routes>
-      </BrowserRouter>
     </AuthProvider>
   )
 }
