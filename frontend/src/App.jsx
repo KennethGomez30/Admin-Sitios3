@@ -11,6 +11,10 @@ import TerceroEditar from './components/TerceroEditar'
 import CentroCostoListado from './components/CentroCostoListado'
 import CentroCostoProrrateo from './components/CentroCostoProrrateo'
 import ReporteTerceros from './components/ReporteTerceros'
+import CentroCostoAdminListado from './components/ListaCentrosCostos'
+import CentroCostoAdminCrear from './components/CentroCostosCrear'
+import CentroCostoEditar from './components/CentroCostoEditar'
+import ReporteCentroCosto from './components/ReporteCentroCosto'
 
 function NavegadorConectado() {
   const navigate = useNavigate()
@@ -98,6 +102,41 @@ export default function App() {
             element={
               <ProtectedRoute ruta="/reporte-terceros">
                 <Dashboard><ReporteTerceros /></Dashboard>
+              </ProtectedRoute>
+            }
+          />
+       
+      {/* ── AUX6: Administración de Centros de Costo ── */}
+           <Route
+             path="/centro-costo/admin"
+             element={
+              <ProtectedRoute ruta="/centro-costo/admin">
+                <Dashboard><CentroCostoAdminListado /></Dashboard>
+              </ProtectedRoute>
+              } 
+           />
+            <Route
+              path="/centro-costo/crear"
+              element={
+                <ProtectedRoute ruta="/centro-costo/admin">
+                  <Dashboard><CentroCostoAdminCrear /></Dashboard>
+                </ProtectedRoute>
+                }
+            />
+          <Route
+            path="/centro-costo/editar/:codigo"
+            element={
+            <ProtectedRoute ruta="/centro-costo/admin">
+              <Dashboard><CentroCostoEditar /></Dashboard>
+            </ProtectedRoute>
+            }
+          /> 
+
+          <Route
+            path="/reporte-centro-costo"
+            element={
+              <ProtectedRoute ruta="/reporte-centro-costo">
+                <Dashboard><ReporteCentroCosto /></Dashboard>
               </ProtectedRoute>
             }
           />

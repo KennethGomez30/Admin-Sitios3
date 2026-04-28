@@ -1,0 +1,6 @@
+@AUX6_HostAddress = http://localhost:5248
+
+GET {{AUX6_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
